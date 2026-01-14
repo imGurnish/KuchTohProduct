@@ -1,8 +1,10 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
+import 'desktop_oauth_helper.dart';
 
 /// Auth Remote Data Source
 ///
@@ -47,6 +49,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   AuthRemoteDataSourceImpl({SupabaseClient? supabaseClient})
     : _supabaseClient = supabaseClient ?? Supabase.instance.client;
+
+  /// Check if running on desktop (Windows, Linux, macOS)
+  bool get _isDesktop {
+    if (kIsWeb) return false;
+    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+  }
 
   /// Lazy initialization of GoogleSignIn (for mobile platforms)
   GoogleSignIn get googleSignIn {
@@ -93,27 +101,40 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> signInWithGoogle() async {
-    if (kIsWeb) {
-      // For Web: Use Supabase's native OAuth flow
-      return await _signInWithGoogleWeb();
+    if (kIsWeb || _isDesktop) {
+      // For Web and Desktop: Use Supabase's native OAuth flow
+      return await _signInWithGoogleOAuth();
     } else {
-      // For Mobile: Use google_sign_in package
+      // For Mobile (Android/iOS): Use google_sign_in package
       return await _signInWithGoogleMobile();
     }
   }
 
-  /// Google Sign In for Web using Supabase OAuth
-  Future<UserModel> _signInWithGoogleWeb() async {
-    // Use Supabase's signInWithOAuth for web - this handles everything
-    await _supabaseClient.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: kIsWeb ? null : 'io.supabase.mindspace://login-callback',
-    );
+  /// Google Sign In using Supabase OAuth (for Web and Desktop)
+  Future<UserModel> _signInWithGoogleOAuth() async {
+    if (_isDesktop) {
+      // Desktop (Windows/Linux/macOS): Use local callback server
+      return await _signInWithGoogleDesktop();
+    }
+
+    // For Web: Use Supabase's signInWithOAuth - this redirects the page
+    await _supabaseClient.auth.signInWithOAuth(OAuthProvider.google);
 
     // Note: This will redirect the page. After redirect back,
     // the auth state listener will pick up the session.
-    // For now, throw an exception that will be caught.
     throw AuthException('Redirecting to Google...');
+  }
+
+  /// Google Sign In for Desktop using local callback server
+  Future<UserModel> _signInWithGoogleDesktop() async {
+    final helper = DesktopOAuthHelper(supabaseClient: _supabaseClient);
+    final response = await helper.signInWithGoogle();
+
+    if (response.user == null) {
+      throw AuthException('Google sign in failed');
+    }
+
+    return UserModel.fromSupabaseUser(response.user!);
   }
 
   /// Google Sign In for Mobile using google_sign_in package
