@@ -63,6 +63,10 @@ class AuthResendVerificationRequested extends AuthEvent {
   List<Object?> get props => [email];
 }
 
+class AuthGoogleSignInRequested extends AuthEvent {
+  const AuthGoogleSignInRequested();
+}
+
 // States
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -133,6 +137,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthResendVerificationRequested>(_onResendVerificationRequested);
+    on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
 
     // Listen to auth state changes
     _authStateSubscription = _authRepository.authStateChanges.listen((user) {
@@ -227,6 +232,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (failure) => emit(AuthError(failure.message)),
       (_) => emit(AuthNeedsVerification(event.email)),
     );
+  }
+
+  Future<void> _onGoogleSignInRequested(
+    AuthGoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    final result = await _authRepository.signInWithGoogle();
+
+    result.fold((failure) {
+      // Ignore redirect messages on web - the auth state listener will handle it
+      if (!failure.message.contains('Redirecting')) {
+        emit(AuthError(failure.message));
+      }
+    }, (user) => emit(AuthAuthenticated(user)));
   }
 
   @override

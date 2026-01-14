@@ -1,0 +1,29 @@
+Analyzing frontend...                                           
+
+   info - Parameter 'message' could be a super parameter - lib\core\error\exceptions.dart:26:9 - use_super_parameters
+   info - Parameter 'message' could be a super parameter - lib\core\error\exceptions.dart:32:9 - use_super_parameters
+   info - Parameter 'message' could be a super parameter - lib\core\error\failures.dart:62:9 - use_super_parameters
+   info - Parameter 'message' could be a super parameter - lib\core\error\failures.dart:68:9 - use_super_parameters
+   info - Parameter 'message' could be a super parameter - lib\core\error\failures.dart:84:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\auth_card.dart:39:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\loading_overlay.dart:33:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\mindspace_button.dart:119:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\mindspace_button.dart:120:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\mindspace_logo.dart:116:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\mindspace_text_field.dart:152:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\mindspace_text_field.dart:258:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\privacy_badge.dart:30:42 - deprecated_member_use
+warning - Unused import: '../models/user_model.dart' - lib\features\auth\data\repositories\auth_repository_impl.dart:7:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\email_verification_screen.dart:314:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\email_verification_screen.dart:423:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\login_screen.dart:411:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\password_recovery_screen.dart:313:38 - deprecated_member_use
+warning - Unused import: '../../../../core/widgets/widgets.dart' - lib\features\auth\presentation\screens\welcome_screen.dart:6:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\welcome_screen.dart:102:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\welcome_screen.dart:306:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\welcome_screen.dart:398:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\screens\welcome_screen.dart:697:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\screens\home_screen.dart:78:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\screens\home_screen.dart:79:38 - deprecated_member_use
+
+25 issues found. (ran in 4.0s)

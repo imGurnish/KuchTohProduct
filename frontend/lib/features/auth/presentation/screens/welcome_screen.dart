@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/responsive.dart';
+import '../bloc/auth_bloc.dart';
 
 /// Welcome Screen
 ///
@@ -15,13 +17,27 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveBuilder(
-      builder: (context, screenType, constraints) {
-        if (screenType == ScreenType.desktop) {
-          return _buildDesktopLayout(context);
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          context.go(AppRouter.home);
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
         }
-        return _buildMobileLayout(context);
       },
+      child: ResponsiveBuilder(
+        builder: (context, screenType, constraints) {
+          if (screenType == ScreenType.desktop) {
+            return _buildDesktopLayout(context);
+          }
+          return _buildMobileLayout(context);
+        },
+      ),
     );
   }
 
@@ -391,10 +407,8 @@ class WelcomeScreen extends StatelessWidget {
               _GoogleSignInButton(
                 isDark: isDark,
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Google sign-in coming soon!'),
-                    ),
+                  context.read<AuthBloc>().add(
+                    const AuthGoogleSignInRequested(),
                   );
                 },
               ),

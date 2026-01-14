@@ -41,8 +41,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, domain.User>> signInWithGoogle() async {
-    // TODO: Implement Google Sign In
-    return const Left(AuthFailure('Google sign-in not implemented yet'));
+    try {
+      final user = await _dataSource.signInWithGoogle();
+      return Right(user);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
