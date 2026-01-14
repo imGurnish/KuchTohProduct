@@ -19,18 +19,22 @@ class LoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenSize = MediaQuery.of(context).size;
 
     return Stack(
       children: [
         child,
         if (isLoading)
           Container(
+            width: screenSize.width,
+            height: screenSize.height,
             color:
                 (isDark ? AppColors.darkBackground : AppColors.lightBackground)
                     .withOpacity(0.8),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(

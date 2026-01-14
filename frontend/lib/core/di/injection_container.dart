@@ -1,52 +1,31 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
-/// Global service locator instance
+/// GetIt service locator instance
 final sl = GetIt.instance;
 
 /// Initialize all dependencies
-/// Call this before runApp() in main.dart
 Future<void> initDependencies() async {
-  // ============================================
-  // EXTERNAL DEPENDENCIES
-  // ============================================
-  // TODO: Initialize Supabase client
-  // final supabase = await Supabase.initialize(
-  //   url: dotenv.env['SUPABASE_URL']!,
-  //   anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  // );
-  // sl.registerLazySingleton(() => supabase.client);
+  // External
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
-  // ============================================
-  // DATA SOURCES
-  // ============================================
-  // sl.registerLazySingleton<AuthRemoteDataSource>(
-  //   () => AuthRemoteDataSourceImpl(sl()),
-  // );
+  // Data sources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(supabaseClient: sl()),
+  );
 
-  // ============================================
-  // REPOSITORIES
-  // ============================================
-  // sl.registerLazySingleton<AuthRepository>(
-  //   () => AuthRepositoryImpl(sl()),
-  // );
+  // Repositories
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(dataSource: sl()),
+  );
 
-  // ============================================
-  // USE CASES
-  // ============================================
-  // sl.registerLazySingleton(() => SignInWithEmail(sl()));
-  // sl.registerLazySingleton(() => SignInWithGoogle(sl()));
-  // sl.registerLazySingleton(() => SignUp(sl()));
-  // sl.registerLazySingleton(() => SignOut(sl()));
-  // sl.registerLazySingleton(() => ResetPassword(sl()));
-
-  // ============================================
-  // BLOCS
-  // ============================================
-  // sl.registerFactory(() => AuthBloc(
-  //   signInWithEmail: sl(),
-  //   signInWithGoogle: sl(),
-  //   signUp: sl(),
-  //   signOut: sl(),
-  //   resetPassword: sl(),
-  // ));
+  // Blocs
+  sl.registerFactory<AuthBloc>(() => AuthBloc(authRepository: sl()));
 }
+
+/// Get instance from service locator
+T getIt<T extends Object>() => sl<T>();

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/responsive.dart';
+import '../bloc/auth_bloc.dart';
 
 /// Login Screen
 ///
@@ -38,13 +40,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveBuilder(
-      builder: (context, screenType, constraints) {
-        if (screenType == ScreenType.desktop) {
-          return _buildDesktopLayout(context);
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          setState(() => _isLoading = true);
+        } else {
+          setState(() => _isLoading = false);
         }
-        return _buildMobileLayout(context);
+
+        if (state is AuthAuthenticated) {
+          context.go(AppRouter.home);
+        } else if (state is AuthNeedsVerification) {
+          context.go(
+            '${AppRouter.emailVerification}?email=${Uri.encodeComponent(state.email)}',
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       },
+      child: ResponsiveBuilder(
+        builder: (context, screenType, constraints) {
+          if (screenType == ScreenType.desktop) {
+            return _buildDesktopLayout(context);
+          }
+          return _buildMobileLayout(context);
+        },
+      ),
     );
   }
 
@@ -528,15 +554,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (hasError) return;
 
-    setState(() => _isLoading = true);
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login will be connected to Supabase')),
-        );
-      }
-    });
+    // Dispatch sign in event to AuthBloc
+    context.read<AuthBloc>().add(
+      AuthSignInRequested(email: email, password: password),
+    );
   }
 }

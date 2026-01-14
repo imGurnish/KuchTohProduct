@@ -26,10 +26,10 @@ abstract class AuthRepository {
   ResultVoid signOut();
 
   /// Send password reset email
-  ResultVoid resetPassword({required String email});
+  ResultVoid resetPassword(String email);
 
   /// Resend email verification
-  ResultVoid resendVerificationEmail();
+  ResultVoid resendVerificationEmail(String email);
 
   /// Get current authenticated user
   User? get currentUser;
