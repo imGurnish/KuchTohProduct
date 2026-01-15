@@ -6,6 +6,7 @@ import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/password_recovery_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/whisper_test/presentation/pages/whisper_test_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// App Router Configuration
@@ -21,6 +22,7 @@ class AppRouter {
   static const String passwordRecovery = '/password-recovery';
   static const String emailVerification = '/email-verification';
   static const String home = '/home';
+  static const String whisperTest = '/whisper-test';
 
   /// Public routes that don't require authentication
   static const List<String> publicRoutes = [
@@ -82,6 +84,13 @@ class AppRouter {
           name: 'home',
           builder: (context, state) => const HomeScreen(),
         ),
+
+        // Whisper Test Screen
+        GoRoute(
+          path: whisperTest,
+          name: 'whisperTest',
+          builder: (context, state) => const WhisperTestPage(),
+        ),
       ],
 
       // Redirect logic for auth state
@@ -142,6 +151,11 @@ class AppRouter {
         path: home,
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: whisperTest,
+        name: 'whisperTest',
+        builder: (context, state) => const WhisperTestPage(),
       ),
     ],
   );

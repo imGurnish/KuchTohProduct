@@ -241,6 +241,30 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
 
+            // Whisper Test button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.go(AppRouter.whisperTest);
+                },
+                icon: const Icon(Icons.mic_rounded),
+                label: const Text('Whisper Test'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark
+                      ? AppColors.darkAccent
+                      : const Color(0xFF6B4EFF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ).animate(delay: 500.ms).fadeIn(),
+
+            const SizedBox(height: 16),
+
             // Sign out button
             SizedBox(
               width: double.infinity,
@@ -265,7 +289,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ).animate(delay: 500.ms).fadeIn(),
+            ).animate(delay: 600.ms).fadeIn(),
           ],
         );
       },
