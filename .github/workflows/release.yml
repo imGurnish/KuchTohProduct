@@ -1,0 +1,129 @@
+name: Build and Release Flutter App
+
+on:
+  push:
+    tags:
+      - 'v*'   # Run only when you push a tag like v1.0.0
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - platform: android
+            os: ubuntu-latest
+          - platform: linux
+            os: ubuntu-latest
+          - platform: windows
+            os: windows-latest
+          - platform: macos
+            os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.7'
+          channel: stable
+          cache: true
+
+      - name: Enable Linux desktop
+        if: matrix.platform == 'linux'
+        run: flutter config --enable-linux-desktop
+
+      - name: Enable Windows desktop
+        if: matrix.platform == 'windows'
+        run: flutter config --enable-windows-desktop
+
+      - name: Enable macOS desktop
+        if: matrix.platform == 'macos'
+        run: flutter config --enable-macos-desktop
+
+      - run: flutter pub get
+
+      - name: Create .env file
+        shell: bash
+        run: |
+          cat > .env <<EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          GOOGLE_WEB_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          EOF
+
+      # 🐧 Install required build packages for Linux only
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev zip
+
+      - name: Build for ${{ matrix.platform }}
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" == "android" ]; then
+            flutter build apk --release
+          elif [ "${{ matrix.platform }}" == "linux" ]; then
+            flutter build linux --release
+          elif [ "${{ matrix.platform }}" == "windows" ]; then
+            flutter build windows --release
+          elif [ "${{ matrix.platform }}" == "macos" ]; then
+            flutter build macos --release
+          fi
+
+      # ✅ Cross-platform packaging (Linux, macOS, Android)
+      - name: Package build output
+        run: |
+          mkdir -p dist
+          VERSION=${GITHUB_REF_NAME}
+          if [ "${{ matrix.platform }}" == "android" ]; then
+            cp build/app/outputs/flutter-apk/app-release.apk dist/mindspace-android-${VERSION}.apk
+          elif [ "${{ matrix.platform }}" == "linux" ]; then
+            zip -r dist/mindspace-linux-${VERSION}.zip build/linux/x64/release/bundle/
+          elif [ "${{ matrix.platform }}" == "macos" ]; then
+            zip -r dist/mindspace-macos-${VERSION}.zip build/macos/Build/Products/Release/
+          fi
+        shell: bash
+
+      # 🪟 Windows packaging with PowerShell
+      - name: Package Windows output
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          $version = "${{ github.ref_name }}"
+          Compress-Archive -Path (Get-ChildItem -Path 'build/windows/x64/runner/Release' -Recurse) `
+            -DestinationPath "dist/mindspace-windows-$version.zip" -Force
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.platform }}
+          path: frontend/dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          files: |
+            artifacts/build-android/*
+            artifacts/build-linux/*
+            artifacts/build-windows/*
+            artifacts/build-macos/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
