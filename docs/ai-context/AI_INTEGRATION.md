@@ -116,7 +116,7 @@ AI should be contextually aware and helpful:
 sequenceDiagram
     participant User
     participant Flutter as Flutter App
-    participant Backend as Go Backend
+    participant Backend as Python Backend
     participant DB as Supabase
     participant Gemini
 
@@ -344,20 +344,19 @@ Tags are generated from:
 
 ### Data Sanitization Before AI
 
-```go
-// Pseudocode for context sanitization
-func sanitizeForAI(dbResult SearchResult) AIContext {
-    return AIContext{
-        FileID:      dbResult.ID,              // ✅ For inline display
-        FileName:    dbResult.OriginalName,    // ✅ Keep
-        FileType:    dbResult.FileType,        // ✅ Keep
-        Title:       dbResult.Title,           // ✅ Keep
-        Summary:     dbResult.Summary,         // ✅ Keep
-        Tags:        dbResult.Tags,            // ✅ Keep
-        ChunkText:   dbResult.Content,         // ✅ Keep
-        // ❌ OMIT: local_path, google_drive_id, user_id, content_hash
-    }
-}
+```python
+# Pseudocode for context sanitization
+def sanitize_for_ai(db_result: SearchResult) -> AIContext:
+    return AIContext(
+        file_id=db_result.id,                  # ✅ For inline display
+        file_name=db_result.original_name,     # ✅ Keep
+        file_type=db_result.file_type,         # ✅ Keep
+        title=db_result.title,                 # ✅ Keep
+        summary=db_result.summary,             # ✅ Keep
+        tags=db_result.tags,                   # ✅ Keep
+        chunk_text=db_result.content,          # ✅ Keep
+        # ❌ OMIT: local_path, google_drive_id, user_id, content_hash
+    )
 ```
 
 ---

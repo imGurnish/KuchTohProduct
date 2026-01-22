@@ -13,7 +13,7 @@ A mindspace-like platform for managing notes and context across various file typ
 ## Tech Stack
 
 - **Flutter** (Frontend)
-- **Go** (Backend)
+- **Python** (Backend)
 - **Supabase** (Database & Auth)
 
 ## Scalability & Infrastructure

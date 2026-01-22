@@ -22,7 +22,7 @@ Comprehensive documentation for the Mindspace personal knowledge management syst
 ```
 Flutter App (Local-First)
     ↓ Upload for processing
-Go Backend (Kubernetes)
+Python Backend (Kubernetes)
     ↓ Extract, embed, tag, cluster → DISCARD FILE
 Supabase (Metadata only)
     ↓ Sync
@@ -73,7 +73,7 @@ Local SQLite (Primary storage)
 ## 🚀 Setup Steps
 
 1. **Database**: Copy `SUPABASE_SETUP.sql` to Supabase SQL Editor and execute
-2. **Backend**: Deploy Go API + processing pods to Kubernetes
+2. **Backend**: Deploy Python API + processing pods to Kubernetes
 3. **Frontend**: Configure Flutter app with Supabase credentials
 4. **Optional**: Set up Google Drive OAuth for backup feature
 

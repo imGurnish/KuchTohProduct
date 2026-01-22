@@ -50,7 +50,7 @@ Build a system where users can:
 ┌─────────────────────────────────────────────────────────────────┐
 │                     CLOUD INFRASTRUCTURE                        │
 │  ┌─────────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │   Go Backend    │  │   Supabase   │  │   Notification    │  │
+│  │ Python Backend  │  │   Supabase   │  │   Notification    │  │
 │  │   (Kubernetes)  │  │   (Postgres  │  │   Service (FCM)   │  │
 │  │                 │  │   + pgvector)│  │                   │  │
 │  │  ┌───────────┐  │  └──────────────┘  └───────────────────┘  │
@@ -77,7 +77,7 @@ Build a system where users can:
 |--------------------|------------------------|--------------------------------------|
 | **Frontend**       | Flutter                | Cross-platform UI (mobile + desktop) |
 | **Local DB**       | SQLite / Hive          | On-device database, offline-first    |
-| **Backend**        | Go + Kubernetes        | Scalable API + processing pods       |
+| **Backend**        | Python + Kubernetes    | Scalable API + processing pods       |
 | **Cloud DB**       | Supabase (Postgres)    | Metadata sync + vector storage       |
 | **Vector Search**  | pgvector               | Semantic embeddings for search       |
 | **Auth**           | Supabase Auth          | JWT-based authentication             |

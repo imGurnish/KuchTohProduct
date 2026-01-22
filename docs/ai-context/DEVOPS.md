@@ -25,7 +25,7 @@ Kubernetes-based scalable infrastructure for file processing, classification, an
 │         ▼                        ▼                        ▼                │
 │  ┌─────────────┐         ┌─────────────┐         ┌─────────────┐          │
 │  │  API Pods   │         │ Processing  │         │  Scheduler  │          │
-│  │ (Go Backend)│         │   Pods      │         │    Pods     │          │
+│  │(Py Backend) │         │   Pods      │         │    Pods     │          │
 │  │ HPA: 2-10   │         │ HPA: 1-20   │         │  Single     │          │
 │  └─────────────┘         └─────────────┘         └─────────────┘          │
 │         │                        │                        │                │
@@ -54,7 +54,7 @@ Kubernetes-based scalable infrastructure for file processing, classification, an
 
 ## 🎯 Pod Types
 
-### 1. API Pods (Go Backend)
+### 1. API Pods (Python Backend)
 
 Handles REST API requests from Flutter app.
 
@@ -766,19 +766,13 @@ spec:
 
 ```dockerfile
 # docker/api/Dockerfile
-FROM golang:1.21-alpine AS builder
+FROM python:3.11-slim
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /mindspace-api ./cmd/api
-
-FROM alpine:3.18
-RUN apk --no-cache add ca-certificates
-WORKDIR /app
-COPY --from=builder /mindspace-api .
 EXPOSE 8080
-CMD ["./mindspace-api"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
 #### OCR Worker Image
