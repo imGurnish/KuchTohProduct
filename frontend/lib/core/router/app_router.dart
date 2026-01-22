@@ -5,7 +5,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/password_recovery_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/main/presentation/screens/main_shell.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// App Router Configuration
@@ -76,11 +76,11 @@ class AppRouter {
           },
         ),
 
-        // Home Screen (authenticated)
+        // Main Shell with bottom navigation (authenticated)
         GoRoute(
           path: home,
           name: 'home',
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) => const MainShell(),
         ),
       ],
 
@@ -141,7 +141,7 @@ class AppRouter {
       GoRoute(
         path: home,
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainShell(),
       ),
     ],
   );

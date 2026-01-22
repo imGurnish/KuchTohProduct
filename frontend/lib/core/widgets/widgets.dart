@@ -10,3 +10,4 @@ export 'mindspace_logo.dart';
 export 'privacy_badge.dart';
 export 'auth_card.dart';
 export 'loading_overlay.dart';
+export 'bottom_nav_bar.dart';

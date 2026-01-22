@@ -23,14 +23,14 @@ class ServerException extends AppException {
 
 /// Exception thrown when there's no network connection
 class NetworkException extends AppException {
-  const NetworkException([String message = 'No internet connection'])
-    : super(message, code: 'NETWORK_ERROR');
+  const NetworkException([super.message = 'No internet connection'])
+    : super(code: 'NETWORK_ERROR');
 }
 
 /// Exception thrown when cache operations fail
 class CacheException extends AppException {
-  const CacheException([String message = 'Cache operation failed'])
-    : super(message, code: 'CACHE_ERROR');
+  const CacheException([super.message = 'Cache operation failed'])
+    : super(code: 'CACHE_ERROR');
 }
 
 /// Exception thrown for validation errors

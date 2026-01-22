@@ -4,7 +4,6 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/user.dart' as domain;
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
-import '../models/user_model.dart';
 
 /// Implementation of AuthRepository
 ///

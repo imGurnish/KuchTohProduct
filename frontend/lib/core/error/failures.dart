@@ -59,14 +59,14 @@ class ServerFailure extends Failure {
 
 /// Failure for network-related errors
 class NetworkFailure extends Failure {
-  const NetworkFailure([String message = 'No internet connection'])
-    : super(message, code: 'NETWORK_ERROR');
+  const NetworkFailure([super.message = 'No internet connection'])
+    : super(code: 'NETWORK_ERROR');
 }
 
 /// Failure for cache-related errors
 class CacheFailure extends Failure {
-  const CacheFailure([String message = 'Cache operation failed'])
-    : super(message, code: 'CACHE_ERROR');
+  const CacheFailure([super.message = 'Cache operation failed'])
+    : super(code: 'CACHE_ERROR');
 }
 
 /// Failure for validation errors
@@ -81,6 +81,6 @@ class ValidationFailure extends Failure {
 
 /// Failure for unexpected/unknown errors
 class UnexpectedFailure extends Failure {
-  const UnexpectedFailure([String message = 'An unexpected error occurred'])
-    : super(message, code: 'UNEXPECTED_ERROR');
+  const UnexpectedFailure([super.message = 'An unexpected error occurred'])
+    : super(code: 'UNEXPECTED_ERROR');
 }
