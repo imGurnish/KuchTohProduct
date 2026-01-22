@@ -23,37 +23,37 @@ class OpenSettings extends FilesEvent {
   const OpenSettings();
 }
 
-/// Load files for a specific category
-class LoadFiles extends FilesEvent {
-  final FileType? category;
-
-  const LoadFiles({this.category});
-
-  @override
-  List<Object?> get props => [category];
+/// Load initial data (counts only for home view)
+class LoadInitialData extends FilesEvent {
+  const LoadInitialData();
 }
 
-/// Change the selected category
-class ChangeCategory extends FilesEvent {
+/// Open a specific category
+class OpenCategory extends FilesEvent {
   final FileType category;
 
-  const ChangeCategory(this.category);
+  const OpenCategory(this.category);
 
   @override
   List<Object?> get props => [category];
 }
 
-/// Search files by query
-class SearchFiles extends FilesEvent {
+/// Go back to home view
+class GoBackToHome extends FilesEvent {
+  const GoBackToHome();
+}
+
+/// Search files across ALL categories
+class SearchAllFiles extends FilesEvent {
   final String query;
 
-  const SearchFiles(this.query);
+  const SearchAllFiles(this.query);
 
   @override
   List<Object?> get props => [query];
 }
 
-/// Clear search and show all files
+/// Clear search and return to previous view
 class ClearSearch extends FilesEvent {
   const ClearSearch();
 }
@@ -68,7 +68,7 @@ class DeleteFile extends FilesEvent {
   List<Object?> get props => [fileId];
 }
 
-/// Refresh files list
+/// Refresh current view
 class RefreshFiles extends FilesEvent {
   const RefreshFiles();
 }

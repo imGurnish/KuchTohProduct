@@ -8,9 +8,12 @@ part 'files_state.dart';
 
 /// Files BLoC
 ///
-/// Manages file browsing state with category filtering, search, and permissions.
+/// Manages file browsing with home/category views and global search.
 class FilesBloc extends Bloc<FilesEvent, FilesState> {
   final FilesRepository _filesRepository;
+
+  // Cache all files for search
+  List<FileItem> _allFilesCache = [];
 
   FilesBloc({required FilesRepository filesRepository})
     : _filesRepository = filesRepository,
@@ -18,9 +21,10 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     on<CheckPermission>(_onCheckPermission);
     on<RequestPermission>(_onRequestPermission);
     on<OpenSettings>(_onOpenSettings);
-    on<LoadFiles>(_onLoadFiles);
-    on<ChangeCategory>(_onChangeCategory);
-    on<SearchFiles>(_onSearchFiles);
+    on<LoadInitialData>(_onLoadInitialData);
+    on<OpenCategory>(_onOpenCategory);
+    on<GoBackToHome>(_onGoBackToHome);
+    on<SearchAllFiles>(_onSearchAllFiles);
     on<ClearSearch>(_onClearSearch);
     on<DeleteFile>(_onDeleteFile);
     on<RefreshFiles>(_onRefreshFiles);
@@ -34,7 +38,7 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
 
     final hasPermission = await _filesRepository.hasPermission();
     if (hasPermission) {
-      add(const LoadFiles());
+      add(const LoadInitialData());
     } else {
       final isPermanentlyDenied = await _filesRepository.isPermanentlyDenied();
       emit(
@@ -55,7 +59,7 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
 
     final granted = await _filesRepository.requestPermission();
     if (granted) {
-      add(const LoadFiles());
+      add(const LoadInitialData());
     } else {
       final isPermanentlyDenied = await _filesRepository.isPermanentlyDenied();
       emit(
@@ -76,34 +80,27 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     add(const CheckPermission());
   }
 
-  Future<void> _onLoadFiles(LoadFiles event, Emitter<FilesState> emit) async {
+  Future<void> _onLoadInitialData(
+    LoadInitialData event,
+    Emitter<FilesState> emit,
+  ) async {
     emit(const FilesLoading());
 
-    final category = event.category ?? FileType.image;
     final countsResult = await _filesRepository.getFileCounts();
-    final filesResult = await _filesRepository.getFilesByCategory(category);
 
-    countsResult.fold((failure) => emit(FilesError(failure.message)), (counts) {
-      filesResult.fold(
-        (failure) => emit(FilesError(failure.message)),
-        (files) => emit(
-          FilesLoaded(
-            files: files,
-            allFiles: files,
-            selectedCategory: category,
-            fileCounts: counts,
-          ),
-        ),
-      );
-    });
+    countsResult.fold(
+      (failure) => emit(FilesError(failure.message)),
+      (counts) =>
+          emit(FilesReady(viewMode: FilesViewMode.home, fileCounts: counts)),
+    );
   }
 
-  Future<void> _onChangeCategory(
-    ChangeCategory event,
+  Future<void> _onOpenCategory(
+    OpenCategory event,
     Emitter<FilesState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! FilesLoaded) return;
+    if (currentState is! FilesReady) return;
 
     emit(const FilesLoading());
 
@@ -114,37 +111,56 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     filesResult.fold(
       (failure) => emit(FilesError(failure.message)),
       (files) => emit(
-        FilesLoaded(
-          files: files,
-          allFiles: files,
-          selectedCategory: event.category,
+        FilesReady(
+          viewMode: FilesViewMode.category,
           fileCounts: currentState.fileCounts,
-          searchQuery: '',
-          isSearching: false,
+          selectedCategory: event.category,
+          files: files,
         ),
       ),
     );
   }
 
-  void _onSearchFiles(SearchFiles event, Emitter<FilesState> emit) {
+  void _onGoBackToHome(GoBackToHome event, Emitter<FilesState> emit) {
     final currentState = state;
-    if (currentState is! FilesLoaded) return;
+    if (currentState is! FilesReady) return;
+
+    emit(
+      FilesReady(
+        viewMode: FilesViewMode.home,
+        fileCounts: currentState.fileCounts,
+      ),
+    );
+  }
+
+  Future<void> _onSearchAllFiles(
+    SearchAllFiles event,
+    Emitter<FilesState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FilesReady) return;
 
     final query = event.query.toLowerCase().trim();
 
     if (query.isEmpty) {
       emit(
         currentState.copyWith(
-          files: currentState.allFiles,
+          viewMode: FilesViewMode.home,
+          files: [],
           searchQuery: '',
-          isSearching: false,
         ),
       );
       return;
     }
 
-    // Filter files by name and extension
-    final filteredFiles = currentState.allFiles.where((file) {
+    // Load all files if cache is empty
+    if (_allFilesCache.isEmpty) {
+      final allFilesResult = await _filesRepository.getAllFiles();
+      allFilesResult.fold((failure) => null, (files) => _allFilesCache = files);
+    }
+
+    // Filter all files by name and extension
+    final filteredFiles = _allFilesCache.where((file) {
       final name = file.name.toLowerCase();
       final extension = file.extension.toLowerCase();
       return name.contains(query) || extension.contains(query);
@@ -152,34 +168,38 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
 
     emit(
       currentState.copyWith(
+        viewMode: FilesViewMode.search,
         files: filteredFiles,
         searchQuery: query,
-        isSearching: true,
       ),
     );
   }
 
   void _onClearSearch(ClearSearch event, Emitter<FilesState> emit) {
     final currentState = state;
-    if (currentState is! FilesLoaded) return;
+    if (currentState is! FilesReady) return;
 
     emit(
-      currentState.copyWith(
-        files: currentState.allFiles,
-        searchQuery: '',
-        isSearching: false,
+      FilesReady(
+        viewMode: FilesViewMode.home,
+        fileCounts: currentState.fileCounts,
       ),
     );
   }
 
   Future<void> _onDeleteFile(DeleteFile event, Emitter<FilesState> emit) async {
     final currentState = state;
-    if (currentState is! FilesLoaded) return;
+    if (currentState is! FilesReady) return;
 
     final result = await _filesRepository.deleteFile(event.fileId);
 
     result.fold((failure) => emit(FilesError(failure.message)), (_) {
-      add(ChangeCategory(currentState.selectedCategory));
+      _allFilesCache = []; // Clear cache
+      if (currentState.selectedCategory != null) {
+        add(OpenCategory(currentState.selectedCategory!));
+      } else {
+        add(const LoadInitialData());
+      }
     });
   }
 
@@ -188,35 +208,15 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     Emitter<FilesState> emit,
   ) async {
     final currentState = state;
-    if (currentState is FilesLoaded) {
-      emit(const FilesLoading());
 
-      // Clear cache and force rescan
-      await _filesRepository.forceRefresh();
+    emit(const FilesLoading());
+    await _filesRepository.forceRefresh();
+    _allFilesCache = [];
 
-      // Reload files
-      final countsResult = await _filesRepository.getFileCounts();
-      final filesResult = await _filesRepository.getFilesByCategory(
-        currentState.selectedCategory,
-      );
-
-      countsResult.fold((failure) => emit(FilesError(failure.message)), (
-        counts,
-      ) {
-        filesResult.fold(
-          (failure) => emit(FilesError(failure.message)),
-          (files) => emit(
-            FilesLoaded(
-              files: files,
-              allFiles: files,
-              selectedCategory: currentState.selectedCategory,
-              fileCounts: counts,
-            ),
-          ),
-        );
-      });
+    if (currentState is FilesReady && currentState.selectedCategory != null) {
+      add(OpenCategory(currentState.selectedCategory!));
     } else {
-      add(const CheckPermission());
+      add(const LoadInitialData());
     }
   }
 }

@@ -3,6 +3,9 @@ part of 'files_bloc.dart';
 /// Permission status
 enum PermissionStatus { unknown, granted, denied, permanentlyDenied }
 
+/// Current view mode
+enum FilesViewMode { home, category, search }
+
 /// Files BLoC States
 abstract class FilesState extends Equatable {
   const FilesState();
@@ -36,49 +39,55 @@ class FilesLoading extends FilesState {
   const FilesLoading();
 }
 
-/// Files loaded successfully
-class FilesLoaded extends FilesState {
-  final List<FileItem> files;
-  final List<FileItem> allFiles; // Original unfiltered list
-  final FileType selectedCategory;
+/// Files ready - home, category, or search view
+class FilesReady extends FilesState {
+  final FilesViewMode viewMode;
   final Map<FileType, int> fileCounts;
+  final FileType? selectedCategory;
+  final List<FileItem> files;
   final String searchQuery;
-  final bool isSearching;
 
-  const FilesLoaded({
-    required this.files,
-    required this.allFiles,
-    required this.selectedCategory,
+  const FilesReady({
+    required this.viewMode,
     required this.fileCounts,
+    this.selectedCategory,
+    this.files = const [],
     this.searchQuery = '',
-    this.isSearching = false,
   });
 
   @override
   List<Object?> get props => [
-    files,
-    allFiles,
-    selectedCategory,
+    viewMode,
     fileCounts,
+    selectedCategory,
+    files,
     searchQuery,
-    isSearching,
   ];
 
-  FilesLoaded copyWith({
-    List<FileItem>? files,
-    List<FileItem>? allFiles,
-    FileType? selectedCategory,
+  FilesReady copyWith({
+    FilesViewMode? viewMode,
     Map<FileType, int>? fileCounts,
+    FileType? selectedCategory,
+    List<FileItem>? files,
     String? searchQuery,
-    bool? isSearching,
   }) {
-    return FilesLoaded(
-      files: files ?? this.files,
-      allFiles: allFiles ?? this.allFiles,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
+    return FilesReady(
+      viewMode: viewMode ?? this.viewMode,
       fileCounts: fileCounts ?? this.fileCounts,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      files: files ?? this.files,
       searchQuery: searchQuery ?? this.searchQuery,
-      isSearching: isSearching ?? this.isSearching,
+    );
+  }
+
+  /// Clear selected category (for use in copyWith)
+  FilesReady clearCategory() {
+    return FilesReady(
+      viewMode: viewMode,
+      fileCounts: fileCounts,
+      selectedCategory: null,
+      files: files,
+      searchQuery: searchQuery,
     );
   }
 }
