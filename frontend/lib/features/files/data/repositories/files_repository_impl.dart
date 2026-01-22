@@ -65,4 +65,14 @@ class FilesRepositoryImpl implements FilesRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  ResultVoid forceRefresh() async {
+    try {
+      await _dataSource.forceRefresh();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

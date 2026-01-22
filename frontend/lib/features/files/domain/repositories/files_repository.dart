@@ -28,4 +28,7 @@ abstract class FilesRepository {
 
   /// Delete a file by ID
   ResultVoid deleteFile(String id);
+
+  /// Force rescan files (clears cache)
+  ResultVoid forceRefresh();
 }

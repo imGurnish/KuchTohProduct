@@ -189,7 +189,32 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
   ) async {
     final currentState = state;
     if (currentState is FilesLoaded) {
-      add(ChangeCategory(currentState.selectedCategory));
+      emit(const FilesLoading());
+
+      // Clear cache and force rescan
+      await _filesRepository.forceRefresh();
+
+      // Reload files
+      final countsResult = await _filesRepository.getFileCounts();
+      final filesResult = await _filesRepository.getFilesByCategory(
+        currentState.selectedCategory,
+      );
+
+      countsResult.fold((failure) => emit(FilesError(failure.message)), (
+        counts,
+      ) {
+        filesResult.fold(
+          (failure) => emit(FilesError(failure.message)),
+          (files) => emit(
+            FilesLoaded(
+              files: files,
+              allFiles: files,
+              selectedCategory: currentState.selectedCategory,
+              fileCounts: counts,
+            ),
+          ),
+        );
+      });
     } else {
       add(const CheckPermission());
     }
