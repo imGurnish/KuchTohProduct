@@ -8,6 +8,21 @@ abstract class FilesEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Check and request permission if needed
+class CheckPermission extends FilesEvent {
+  const CheckPermission();
+}
+
+/// Request storage permission
+class RequestPermission extends FilesEvent {
+  const RequestPermission();
+}
+
+/// Open app settings
+class OpenSettings extends FilesEvent {
+  const OpenSettings();
+}
+
 /// Load files for a specific category
 class LoadFiles extends FilesEvent {
   final FileType? category;
@@ -26,6 +41,21 @@ class ChangeCategory extends FilesEvent {
 
   @override
   List<Object?> get props => [category];
+}
+
+/// Search files by query
+class SearchFiles extends FilesEvent {
+  final String query;
+
+  const SearchFiles(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}
+
+/// Clear search and show all files
+class ClearSearch extends FilesEvent {
+  const ClearSearch();
 }
 
 /// Delete a file

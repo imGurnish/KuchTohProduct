@@ -1,157 +1,141 @@
+import 'dart:io';
 import '../../domain/entities/file_item.dart';
 import '../models/file_item_model.dart';
+import '../services/file_scanner_service.dart';
 
 /// Files Local Data Source Interface
 abstract class FilesLocalDataSource {
-  /// Get files by category type
+  /// Check if storage permission is granted
+  Future<bool> hasPermission();
+
+  /// Request storage permission
+  Future<bool> requestPermission();
+
+  /// Check if permission is permanently denied
+  Future<bool> isPermanentlyDenied();
+
+  /// Open app settings
+  Future<bool> openSettings();
+
+  /// Get files by category
   Future<List<FileItemModel>> getFilesByCategory(FileType type);
 
   /// Get all files
   Future<List<FileItemModel>> getAllFiles();
 
-  /// Get count of files per category
+  /// Get file counts per category
   Future<Map<FileType, int>> getFileCounts();
 
   /// Delete a file
   Future<void> deleteFile(String id);
 }
 
-/// Mock implementation for testing UI
+/// Real implementation using file scanner
 class FilesLocalDataSourceImpl implements FilesLocalDataSource {
-  // Mock data for development
-  final List<FileItemModel> _mockFiles = [
-    // Images
-    FileItemModel(
-      id: '1',
-      name: 'vacation_photo.jpg',
-      path: '/storage/images/vacation_photo.jpg',
-      type: FileType.image,
-      size: 2500000,
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    FileItemModel(
-      id: '2',
-      name: 'screenshot_2024.png',
-      path: '/storage/images/screenshot_2024.png',
-      type: FileType.image,
-      size: 850000,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    FileItemModel(
-      id: '3',
-      name: 'profile_picture.jpg',
-      path: '/storage/images/profile_picture.jpg',
-      type: FileType.image,
-      size: 1200000,
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-    // Videos
-    FileItemModel(
-      id: '4',
-      name: 'birthday_party.mp4',
-      path: '/storage/videos/birthday_party.mp4',
-      type: FileType.video,
-      size: 150000000,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    FileItemModel(
-      id: '5',
-      name: 'tutorial_flutter.mp4',
-      path: '/storage/videos/tutorial_flutter.mp4',
-      type: FileType.video,
-      size: 85000000,
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-    // Audio
-    FileItemModel(
-      id: '6',
-      name: 'podcast_episode_42.mp3',
-      path: '/storage/audio/podcast_episode_42.mp3',
-      type: FileType.audio,
-      size: 45000000,
-      createdAt: DateTime.now().subtract(const Duration(days: 7)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 7)),
-    ),
-    FileItemModel(
-      id: '7',
-      name: 'voice_memo.m4a',
-      path: '/storage/audio/voice_memo.m4a',
-      type: FileType.audio,
-      size: 2500000,
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    // PDFs
-    FileItemModel(
-      id: '8',
-      name: 'meeting_notes.pdf',
-      path: '/storage/documents/meeting_notes.pdf',
-      type: FileType.pdf,
-      size: 520000,
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-    FileItemModel(
-      id: '9',
-      name: 'flutter_guide.pdf',
-      path: '/storage/documents/flutter_guide.pdf',
-      type: FileType.pdf,
-      size: 8500000,
-      createdAt: DateTime.now().subtract(const Duration(days: 20)),
-      modifiedAt: DateTime.now().subtract(const Duration(days: 20)),
-    ),
-    // Text files
-    FileItemModel(
-      id: '10',
-      name: 'todo_list.txt',
-      path: '/storage/text/todo_list.txt',
-      type: FileType.text,
-      size: 2500,
-      createdAt: DateTime.now().subtract(const Duration(hours: 12)),
-      modifiedAt: DateTime.now().subtract(const Duration(hours: 12)),
-    ),
-    FileItemModel(
-      id: '11',
-      name: 'shopping_list.txt',
-      path: '/storage/text/shopping_list.txt',
-      type: FileType.text,
-      size: 1200,
-      createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      modifiedAt: DateTime.now().subtract(const Duration(hours: 6)),
-    ),
-  ];
+  final FileScannerService _scanner;
+
+  // Cache for performance
+  Map<FileType, List<FileItemModel>>? _cache;
+  DateTime? _cacheTime;
+  static const _cacheDuration = Duration(minutes: 5);
+
+  FilesLocalDataSourceImpl({FileScannerService? scanner})
+    : _scanner = scanner ?? FileScannerService();
+
+  bool get _isCacheValid =>
+      _cache != null &&
+      _cacheTime != null &&
+      DateTime.now().difference(_cacheTime!) < _cacheDuration;
+
+  void _invalidateCache() {
+    _cache = null;
+    _cacheTime = null;
+  }
+
+  @override
+  Future<bool> hasPermission() => _scanner.hasPermission();
+
+  @override
+  Future<bool> requestPermission() => _scanner.requestPermission();
+
+  @override
+  Future<bool> isPermanentlyDenied() => _scanner.isPermanentlyDenied();
+
+  @override
+  Future<bool> openSettings() => _scanner.openSettings();
 
   @override
   Future<List<FileItemModel>> getFilesByCategory(FileType type) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _mockFiles.where((file) => file.type == type).toList();
+    // Check cache first
+    if (_isCacheValid && _cache!.containsKey(type)) {
+      return _cache![type]!;
+    }
+
+    final files = await _scanner.scanFilesByType(type);
+    final models = files
+        .map(
+          (f) => FileItemModel(
+            id: f.id,
+            name: f.name,
+            path: f.path,
+            type: f.type,
+            size: f.size,
+            createdAt: f.createdAt,
+            modifiedAt: f.modifiedAt,
+          ),
+        )
+        .toList();
+
+    // Update cache
+    _cache ??= {};
+    _cache![type] = models;
+    _cacheTime = DateTime.now();
+
+    return models;
   }
 
   @override
   Future<List<FileItemModel>> getAllFiles() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(_mockFiles);
+    final allFiles = <FileItemModel>[];
+    for (final type in FileType.values) {
+      allFiles.addAll(await getFilesByCategory(type));
+    }
+    allFiles.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+    return allFiles;
   }
 
   @override
   Future<Map<FileType, int>> getFileCounts() async {
-    await Future.delayed(const Duration(milliseconds: 100));
     final counts = <FileType, int>{};
     for (final type in FileType.values) {
-      counts[type] = _mockFiles.where((f) => f.type == type).length;
+      final files = await getFilesByCategory(type);
+      counts[type] = files.length;
     }
     return counts;
   }
 
   @override
   Future<void> deleteFile(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _mockFiles.removeWhere((file) => file.id == id);
+    // Find the file in cache
+    if (_cache != null) {
+      for (final entry in _cache!.entries) {
+        final file = entry.value.firstWhere(
+          (f) => f.id == id,
+          orElse: () => throw Exception('File not found'),
+        );
+
+        try {
+          final fileEntity = File(file.path);
+          if (await fileEntity.exists()) {
+            await fileEntity.delete();
+          }
+          _invalidateCache();
+          return;
+        } catch (e) {
+          throw Exception('Failed to delete file: $e');
+        }
+      }
+    }
+    throw Exception('File not found');
   }
 }

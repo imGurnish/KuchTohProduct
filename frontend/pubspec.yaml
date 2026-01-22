@@ -45,6 +45,12 @@ dependencies:
   
   # Environment Variables
   flutter_dotenv: ^5.1.0
+  
+  # File System Access
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.4
+  mime: ^2.0.0
+  video_thumbnail: ^0.5.3
 
 dev_dependencies:
   flutter_test:

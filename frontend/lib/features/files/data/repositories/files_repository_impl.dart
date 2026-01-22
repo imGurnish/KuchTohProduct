@@ -15,6 +15,18 @@ class FilesRepositoryImpl implements FilesRepository {
     : _dataSource = dataSource;
 
   @override
+  Future<bool> hasPermission() => _dataSource.hasPermission();
+
+  @override
+  Future<bool> requestPermission() => _dataSource.requestPermission();
+
+  @override
+  Future<bool> isPermanentlyDenied() => _dataSource.isPermanentlyDenied();
+
+  @override
+  Future<bool> openSettings() => _dataSource.openSettings();
+
+  @override
   ResultFuture<List<FileItem>> getFilesByCategory(FileType type) async {
     try {
       final files = await _dataSource.getFilesByCategory(type);
